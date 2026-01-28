@@ -18,8 +18,8 @@ export default function LocalityMap({ coordinates, name }) {
             attributionControl: true
         })
 
-        // Add dark tile layer
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // Add light theme tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 19
@@ -32,13 +32,13 @@ export default function LocalityMap({ coordinates, name }) {
         <div style="
           width: 40px;
           height: 40px;
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+          background: linear-gradient(135deg, #0e82adb0 0%, #0e82ad 100%);
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+          box-shadow: 0 4px 15px rgba(14, 130, 173, 0.4);
         ">
           <span style="transform: rotate(45deg); font-size: 16px;">📍</span>
         </div>

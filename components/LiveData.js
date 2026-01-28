@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-const API_BASE = 'http://localhost:3001'
+import { API_BASE } from '@/lib/config'
 
 /**
  * Hook to fetch live AQI data for a locality

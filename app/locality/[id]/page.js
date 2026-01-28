@@ -6,229 +6,19 @@ import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
 import { generatePDFReport } from '@/components/ReportGenerator'
 import { LiveAQIBadge, NearbyPlacesList } from '@/components/LiveData'
+import { MapPin,Wind, Droplets, Zap, GraduationCap, Shield, TrendingUp, Stethoscope, Car, Heart, XCircle, BarChart3, Sparkles, Scale, FileText } from 'lucide-react'
+import { storage } from '@/lib/storage'
 
 const LocalityMap = dynamic(() => import('@/components/LocalityMap'), {
     ssr: false,
     loading: () => <div className="map-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)' }}>Loading map...</div>
 })
 
-// All 15 localities with full data
-const localitiesData = {
-    "kokapet": {
-        id: "kokapet", name: "Kokapet", area: "Financial District, Hyderabad", coordinates: [17.4037, 78.3459], totalScore: 82, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 72, label: "Moderate", status: "moderate", details: "AQI around 80-100, improving with green zones" },
-            water: { score: 65, label: "Mixed", status: "moderate", details: "Municipal + borewell, some tanker dependence in summer" },
-            power: { score: 85, label: "Stable", status: "good", details: "TSSPDCL grid, avg 2-3 outages/month" },
-            schools: { score: 88, label: "Excellent", status: "good", details: "DPS, Oakridge, CHIREC within 5km" },
-            safety: { score: 78, label: "Good", status: "good", details: "Low crime rate, gated communities, police patrols" },
-            growth: { score: 92, label: "High Growth", status: "good", details: "Metro Phase 2, ORR proximity, IT corridor expansion" },
-            hospitals: { score: 80, label: "Good", status: "good", details: "Continental, KIMS within 8km" },
-            traffic: { score: 70, label: "Moderate", status: "moderate", details: "ORR access good, internal roads developing" }
-        },
-        priceRange: "₹8,000 - ₹12,000 per sqft", highlights: ["Metro Phase 2 planned", "Near Financial District", "Premium gated communities"]
-    },
-    "gachibowli": {
-        id: "gachibowli", name: "Gachibowli", area: "IT Hub, Hyderabad", coordinates: [17.4401, 78.3489], totalScore: 78, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 65, label: "Moderate", status: "moderate", details: "AQI 90-120, traffic pollution" },
-            water: { score: 70, label: "Good", status: "good", details: "HMWSSB supply, backup borewells" },
-            power: { score: 82, label: "Stable", status: "good", details: "Industrial grade supply, rare outages" },
-            schools: { score: 90, label: "Excellent", status: "good", details: "ISB, IIIT, multiple international schools" },
-            safety: { score: 80, label: "Good", status: "good", details: "IT corridor security, well-lit areas" },
-            growth: { score: 75, label: "Mature", status: "good", details: "Established IT hub, stable appreciation" },
-            hospitals: { score: 85, label: "Excellent", status: "good", details: "KIMS, AIG, multiple specialty hospitals" },
-            traffic: { score: 55, label: "Heavy", status: "poor", details: "Peak hour congestion, ORR helps" }
-        },
-        priceRange: "₹7,500 - ₹11,000 per sqft", highlights: ["IT Hub", "Best hospitals", "Top schools"]
-    },
-    "kondapur": {
-        id: "kondapur", name: "Kondapur", area: "Tech Corridor, Hyderabad", coordinates: [17.4625, 78.3522], totalScore: 75, recommendation: "hold",
-        metrics: {
-            airQuality: { score: 62, label: "Moderate", status: "moderate", details: "AQI 95-125, urban pollution" },
-            water: { score: 68, label: "Mixed", status: "moderate", details: "Municipal supply with summer shortages" },
-            power: { score: 78, label: "Good", status: "good", details: "Occasional outages, improving grid" },
-            schools: { score: 85, label: "Excellent", status: "good", details: "Multiple CBSE/ICSE schools nearby" },
-            safety: { score: 75, label: "Good", status: "good", details: "Active police station, residential security" },
-            growth: { score: 72, label: "Stable", status: "good", details: "Mature area, steady appreciation" },
-            hospitals: { score: 82, label: "Good", status: "good", details: "Rainbow, KIMS nearby" },
-            traffic: { score: 52, label: "Heavy", status: "poor", details: "Major bottleneck during peak hours" }
-        },
-        priceRange: "₹6,500 - ₹9,500 per sqft", highlights: ["Affordable IT area", "Good connectivity", "Established locality"]
-    },
-    "financial-district": {
-        id: "financial-district", name: "Financial District", area: "Nanakramguda, Hyderabad", coordinates: [17.4234, 78.3424], totalScore: 85, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 75, label: "Good", status: "good", details: "AQI 70-90, well-planned green spaces" },
-            water: { score: 72, label: "Good", status: "good", details: "Premium water supply, STP in complexes" },
-            power: { score: 88, label: "Excellent", status: "good", details: "Underground cabling, minimal outages" },
-            schools: { score: 85, label: "Excellent", status: "good", details: "DPS, CHIREC, international schools" },
-            safety: { score: 90, label: "Excellent", status: "good", details: "Corporate security, CCTV coverage" },
-            growth: { score: 88, label: "High Growth", status: "good", details: "Planned development, premium appreciation" },
-            hospitals: { score: 78, label: "Good", status: "good", details: "Continental nearby, more planned" },
-            traffic: { score: 65, label: "Moderate", status: "moderate", details: "Wide roads, ORR access" }
-        },
-        priceRange: "₹9,000 - ₹14,000 per sqft", highlights: ["Premium location", "Planned infrastructure", "Corporate hub"]
-    },
-    "hitech-city": {
-        id: "hitech-city", name: "Hitech City", area: "Madhapur, Hyderabad", coordinates: [17.4486, 78.3772], totalScore: 76, recommendation: "hold",
-        metrics: {
-            airQuality: { score: 60, label: "Moderate", status: "moderate", details: "AQI 100-130, high traffic zones" },
-            water: { score: 72, label: "Good", status: "good", details: "Reliable municipal supply" },
-            power: { score: 80, label: "Good", status: "good", details: "IT-grade power infrastructure" },
-            schools: { score: 88, label: "Excellent", status: "good", details: "Multiple premium schools" },
-            safety: { score: 78, label: "Good", status: "good", details: "IT security, active surveillance" },
-            growth: { score: 70, label: "Mature", status: "good", details: "Saturated, limited new supply" },
-            hospitals: { score: 85, label: "Excellent", status: "good", details: "Apollo, KIMS in vicinity" },
-            traffic: { score: 48, label: "Very Heavy", status: "poor", details: "Major congestion, metro helps" }
-        },
-        priceRange: "₹8,000 - ₹12,000 per sqft", highlights: ["IT Capital", "Metro connected", "Vibrant nightlife"]
-    },
-    "tellapur": {
-        id: "tellapur", name: "Tellapur", area: "West Hyderabad", coordinates: [17.4833, 78.2583], totalScore: 79, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 78, label: "Good", status: "good", details: "AQI 60-80, less congested area" },
-            water: { score: 60, label: "Mixed", status: "moderate", details: "Borewell dependent, improving infra" },
-            power: { score: 75, label: "Good", status: "good", details: "Developing grid, occasional outages" },
-            schools: { score: 82, label: "Good", status: "good", details: "Phoenix Greens, DRS International" },
-            safety: { score: 80, label: "Good", status: "good", details: "Gated townships, low crime" },
-            growth: { score: 90, label: "High Growth", status: "good", details: "ORR advantage, new developments" },
-            hospitals: { score: 70, label: "Moderate", status: "moderate", details: "Limited options, improving" },
-            traffic: { score: 75, label: "Low", status: "good", details: "Less congested, ORR access" }
-        },
-        priceRange: "₹5,500 - ₹8,000 per sqft", highlights: ["Affordable", "High growth potential", "ORR connected"]
-    },
-    "nallagandla": {
-        id: "nallagandla", name: "Nallagandla", area: "Serilingampally, Hyderabad", coordinates: [17.4572, 78.3128], totalScore: 74, recommendation: "hold",
-        metrics: {
-            airQuality: { score: 70, label: "Good", status: "good", details: "AQI 75-95, suburban area" },
-            water: { score: 58, label: "Mixed", status: "moderate", details: "Tanker dependence in peak summer" },
-            power: { score: 72, label: "Good", status: "good", details: "Improving infrastructure" },
-            schools: { score: 80, label: "Good", status: "good", details: "Glendale, Manthan schools" },
-            safety: { score: 76, label: "Good", status: "good", details: "Residential area, community watch" },
-            growth: { score: 78, label: "Growing", status: "good", details: "Metro connectivity expected" },
-            hospitals: { score: 68, label: "Moderate", status: "moderate", details: "Depends on Gachibowli hospitals" },
-            traffic: { score: 65, label: "Moderate", status: "moderate", details: "Internal roads need improvement" }
-        },
-        priceRange: "₹5,000 - ₹7,500 per sqft", highlights: ["Budget-friendly", "Family-oriented", "Growing infrastructure"]
-    },
-    "banjara-hills": {
-        id: "banjara-hills", name: "Banjara Hills", area: "Central Hyderabad", coordinates: [17.4156, 78.4347], totalScore: 88, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 68, label: "Moderate", status: "moderate", details: "AQI 85-110, urban area with parks" },
-            water: { score: 85, label: "Excellent", status: "good", details: "Premium municipal supply, no shortages" },
-            power: { score: 92, label: "Excellent", status: "good", details: "Priority zone, minimal outages" },
-            schools: { score: 95, label: "Premium", status: "good", details: "Oakridge, Chirec, Meridian - top schools" },
-            safety: { score: 92, label: "Excellent", status: "good", details: "VIP zone, heavy police presence" },
-            growth: { score: 70, label: "Mature", status: "good", details: "Established posh area, stable values" },
-            hospitals: { score: 95, label: "Premium", status: "good", details: "Apollo, Care, Yashoda - all major hospitals" },
-            traffic: { score: 58, label: "Heavy", status: "moderate", details: "Congested during peak, good roads" }
-        },
-        priceRange: "₹15,000 - ₹25,000 per sqft", highlights: ["Premium location", "Best hospitals", "Elite schools", "VIP zone"]
-    },
-    "jubilee-hills": {
-        id: "jubilee-hills", name: "Jubilee Hills", area: "Film Nagar, Hyderabad", coordinates: [17.4325, 78.4072], totalScore: 90, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 72, label: "Good", status: "good", details: "AQI 75-95, greenery and parks" },
-            water: { score: 88, label: "Excellent", status: "good", details: "Best water supply in city" },
-            power: { score: 94, label: "Excellent", status: "good", details: "Underground cables, rarely any cuts" },
-            schools: { score: 92, label: "Premium", status: "good", details: "Oakridge, Silver Oaks, international schools" },
-            safety: { score: 95, label: "Excellent", status: "good", details: "Celebrity area, private security" },
-            growth: { score: 72, label: "Stable", status: "good", details: "Iconic location, premium appreciation" },
-            hospitals: { score: 90, label: "Excellent", status: "good", details: "All major hospitals within 5km" },
-            traffic: { score: 62, label: "Moderate", status: "moderate", details: "Good roads, some evening congestion" }
-        },
-        priceRange: "₹18,000 - ₹30,000 per sqft", highlights: ["Most premium area", "Celebrity enclave", "Iconic location", "Best infrastructure"]
-    },
-    "madhapur": {
-        id: "madhapur", name: "Madhapur", area: "IT Corridor, Hyderabad", coordinates: [17.4489, 78.3916], totalScore: 77, recommendation: "hold",
-        metrics: {
-            airQuality: { score: 58, label: "Moderate", status: "moderate", details: "AQI 105-135, heavy traffic area" },
-            water: { score: 75, label: "Good", status: "good", details: "Municipal supply with backup" },
-            power: { score: 82, label: "Good", status: "good", details: "IT-grade infrastructure" },
-            schools: { score: 86, label: "Excellent", status: "good", details: "DPS, Oakridge, Manthan schools" },
-            safety: { score: 78, label: "Good", status: "good", details: "Good security, IT area surveillance" },
-            growth: { score: 72, label: "Stable", status: "good", details: "Established area, steady demand" },
-            hospitals: { score: 88, label: "Excellent", status: "good", details: "AIG, KIMS, Continental nearby" },
-            traffic: { score: 45, label: "Very Heavy", status: "poor", details: "Worst traffic in Hyderabad" }
-        },
-        priceRange: "₹7,000 - ₹11,000 per sqft", highlights: ["IT hub center", "Great hospitals", "Nightlife", "Food scene"]
-    },
-    "kukatpally": {
-        id: "kukatpally", name: "Kukatpally", area: "North West Hyderabad", coordinates: [17.4947, 78.3996], totalScore: 72, recommendation: "hold",
-        metrics: {
-            airQuality: { score: 55, label: "Poor", status: "poor", details: "AQI 110-140, industrial pollution" },
-            water: { score: 72, label: "Good", status: "good", details: "Municipal supply, some areas mixed" },
-            power: { score: 75, label: "Good", status: "good", details: "Regular grid, occasional outages" },
-            schools: { score: 82, label: "Good", status: "good", details: "Sri Chaitanya, Narayana, JNTU area" },
-            safety: { score: 70, label: "Moderate", status: "moderate", details: "Dense area, mixed safety record" },
-            growth: { score: 68, label: "Stable", status: "moderate", details: "Mature locality, limited growth" },
-            hospitals: { score: 78, label: "Good", status: "good", details: "KPHB, Apollo clinic nearby" },
-            traffic: { score: 50, label: "Heavy", status: "poor", details: "Major junction, often congested" }
-        },
-        priceRange: "₹5,500 - ₹8,500 per sqft", highlights: ["JNTU hub", "Affordable", "Shopping malls", "Good connectivity"]
-    },
-    "uppal": {
-        id: "uppal", name: "Uppal", area: "East Hyderabad", coordinates: [17.4065, 78.5593], totalScore: 68, recommendation: "hold",
-        metrics: {
-            airQuality: { score: 52, label: "Poor", status: "poor", details: "AQI 115-145, industrial zone nearby" },
-            water: { score: 65, label: "Mixed", status: "moderate", details: "Municipal supply with summer issues" },
-            power: { score: 70, label: "Good", status: "good", details: "Average grid, some outages" },
-            schools: { score: 75, label: "Good", status: "good", details: "Local schools, growing options" },
-            safety: { score: 68, label: "Moderate", status: "moderate", details: "Industrial area, improving security" },
-            growth: { score: 75, label: "Growing", status: "good", details: "Metro boost, new developments" },
-            hospitals: { score: 65, label: "Moderate", status: "moderate", details: "Limited options, ECIL hospitals" },
-            traffic: { score: 60, label: "Moderate", status: "moderate", details: "Metro helps, still congested" }
-        },
-        priceRange: "₹4,000 - ₹6,500 per sqft", highlights: ["Metro connected", "Affordable", "Growing area", "IT jobs nearby"]
-    },
-    "miyapur": {
-        id: "miyapur", name: "Miyapur", area: "North West Hyderabad", coordinates: [17.4965, 78.3528], totalScore: 73, recommendation: "hold",
-        metrics: {
-            airQuality: { score: 65, label: "Moderate", status: "moderate", details: "AQI 90-115, suburban area" },
-            water: { score: 62, label: "Mixed", status: "moderate", details: "Borewell heavy, improving supply" },
-            power: { score: 72, label: "Good", status: "good", details: "Growing grid infrastructure" },
-            schools: { score: 78, label: "Good", status: "good", details: "DRS, Meridian schools nearby" },
-            safety: { score: 75, label: "Good", status: "good", details: "Residential area, low crime" },
-            growth: { score: 82, label: "High Growth", status: "good", details: "Metro terminal, rapid development" },
-            hospitals: { score: 68, label: "Moderate", status: "moderate", details: "Limited, depends on Kukatpally" },
-            traffic: { score: 68, label: "Moderate", status: "moderate", details: "Metro reduces congestion" }
-        },
-        priceRange: "₹5,000 - ₹7,500 per sqft", highlights: ["Metro terminal", "Affordable", "Fast growing", "Family friendly"]
-    },
-    "manikonda": {
-        id: "manikonda", name: "Manikonda", area: "Near Gachibowli, Hyderabad", coordinates: [17.4052, 78.3872], totalScore: 76, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 68, label: "Moderate", status: "moderate", details: "AQI 85-110, near IT corridor" },
-            water: { score: 70, label: "Good", status: "good", details: "Municipal supply, some areas mixed" },
-            power: { score: 78, label: "Good", status: "good", details: "IT area spillover, good grid" },
-            schools: { score: 82, label: "Good", status: "good", details: "Gachibowli schools accessible" },
-            safety: { score: 76, label: "Good", status: "good", details: "Residential area, improving" },
-            growth: { score: 85, label: "High Growth", status: "good", details: "IT spillover, rapid appreciation" },
-            hospitals: { score: 75, label: "Good", status: "good", details: "Continental, Gachibowli hospitals" },
-            traffic: { score: 58, label: "Heavy", status: "moderate", details: "Gachibowli traffic affects area" }
-        },
-        priceRange: "₹6,000 - ₹9,000 per sqft", highlights: ["Gachibowli adjacent", "High growth", "IT jobs", "Value for money"]
-    },
-    "bachupally": {
-        id: "bachupally", name: "Bachupally", area: "North Hyderabad", coordinates: [17.5422, 78.3856], totalScore: 71, recommendation: "buy",
-        metrics: {
-            airQuality: { score: 72, label: "Good", status: "good", details: "AQI 70-90, less congested" },
-            water: { score: 58, label: "Mixed", status: "moderate", details: "Borewell dependent, tankers in summer" },
-            power: { score: 68, label: "Moderate", status: "moderate", details: "Developing grid, some outages" },
-            schools: { score: 75, label: "Good", status: "good", details: "Growing school options" },
-            safety: { score: 78, label: "Good", status: "good", details: "Peaceful area, gated communities" },
-            growth: { score: 88, label: "High Growth", status: "good", details: "ORR nearby, new developments" },
-            hospitals: { score: 62, label: "Mixed", status: "moderate", details: "Limited, improving options" },
-            traffic: { score: 75, label: "Low", status: "good", details: "Less congested, ORR access" }
-        },
-        priceRange: "₹4,500 - ₹7,000 per sqft", highlights: ["Most affordable", "High growth potential", "ORR access", "Low traffic"]
-    }
-}
+import { api } from '@/lib/api'
 
 const metricIcons = {
-    airQuality: '🌫️', water: '💧', power: '⚡', schools: '🏫',
-    safety: '🚔', growth: '🚧', hospitals: '🏥', traffic: '🚦'
+    airQuality: Wind, water: Droplets, power: Zap, schools: GraduationCap,
+    safety: Shield, growth: TrendingUp, hospitals: Stethoscope, traffic: Car
 }
 
 const metricLabels = {
@@ -239,93 +29,56 @@ const metricLabels = {
 export default function LocalityPage() {
     const params = useParams()
     const [locality, setLocality] = useState(null)
-    const [user, setUser] = useState(null)
     const [isFavorite, setIsFavorite] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     useEffect(() => {
         const id = params.id
-        if (localitiesData[id]) {
-            setLocality(localitiesData[id])
-        }
 
-        // Check user session and favorites
-        const session = localStorage.getItem('localityiq_session')
-        if (session) {
-            const sessionData = JSON.parse(session)
-            setUser(sessionData)
+        const fetchData = async () => {
+            try {
+                setLoading(true)
+                const data = await api.getLocality(id)
+                setLocality(data)
 
-            const users = JSON.parse(localStorage.getItem('localityiq_users') || '[]')
-            const currentUser = users.find(u => u.email === sessionData.email)
-            if (currentUser?.favorites?.includes(id)) {
-                setIsFavorite(true)
+                // Check if this locality is favorited
+                const favoriteStatus = storage.isFavorite(id)
+                setIsFavorite(favoriteStatus)
+            } catch (err) {
+                console.error('Failed to load locality:', err)
+                setError('Locality not found or API error')
+            } finally {
+                setLoading(false)
             }
         }
+
+        if (id) fetchData()
     }, [params.id])
 
     const toggleFavorite = () => {
-        if (!user) {
-            alert('Please login to save favorites')
-            return
-        }
+        if (!locality) return
 
-        const users = JSON.parse(localStorage.getItem('localityiq_users') || '[]')
-        const userIndex = users.findIndex(u => u.email === user.email)
-
-        if (userIndex === -1) return
-
-        if (!users[userIndex].favorites) {
-            users[userIndex].favorites = []
-        }
-
-        const favIndex = users[userIndex].favorites.indexOf(locality.id)
-        if (favIndex > -1) {
-            users[userIndex].favorites.splice(favIndex, 1)
-            setIsFavorite(false)
-        } else {
-            users[userIndex].favorites.push(locality.id)
-            setIsFavorite(true)
-        }
-
-        localStorage.setItem('localityiq_users', JSON.stringify(users))
+        const newFavoriteStatus = storage.toggleFavorite(locality.id)
+        setIsFavorite(newFavoriteStatus)
     }
 
-    const saveReport = () => {
-        if (!user) {
-            alert('Please login to save reports')
-            return
-        }
-
-        const users = JSON.parse(localStorage.getItem('localityiq_users') || '[]')
-        const userIndex = users.findIndex(u => u.email === user.email)
-
-        if (userIndex === -1) return
-
-        if (!users[userIndex].savedReports) {
-            users[userIndex].savedReports = []
-        }
-
-        // Check if already saved
-        if (users[userIndex].savedReports.find(r => r.localityId === locality.id)) {
-            alert('Report already saved!')
-            return
-        }
-
-        users[userIndex].savedReports.push({
-            localityId: locality.id,
-            localityName: locality.name,
-            area: locality.area,
-            score: locality.totalScore,
-            savedAt: new Date().toISOString()
-        })
-
-        localStorage.setItem('localityiq_users', JSON.stringify(users))
-        alert('Report saved to your profile!')
-    }
-
-    if (!locality) {
+    if (loading) {
         return (
-            <div className="detail-page text-center">
-                <h2>Loading...</h2>
+            <div className="detail-page text-center" style={{ paddingTop: '150px' }}>
+                <div className="loading-bar" style={{ margin: '0 auto' }}></div>
+                <h2 style={{ mt: '20px' }}>Loading locality details...</h2>
+            </div>
+        )
+    }
+
+    if (error || !locality) {
+        return (
+            <div className="detail-page text-center" style={{ paddingTop: '150px' }}>
+                <h2><XCircle className="inline w-5 h-5 mr-2" /> {error || 'Locality not found'}</h2>
+                <Link href="/" className="btn btn-secondary" style={{ marginTop: '20px' }}>
+                    Go Back Home
+                </Link>
             </div>
         )
     }
@@ -344,119 +97,158 @@ export default function LocalityPage() {
     const offset = circumference - (locality.totalScore / 100) * circumference
 
     return (
-        <div className="detail-page">
+        <div className="max-w-7xl mx-auto px-6 py-24 font-ui">
             {/* Header */}
-            <div className="detail-header">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16">
                 <div>
-                    <Link href="/" style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'inline-block', marginBottom: '8px' }}>
+                    <Link href="/" className="text-neutral-500 hover:text-primary-600 text-sm font-bold mb-6 inline-flex items-center transition-all hover:-translate-x-1">
                         ← Back to localities
                     </Link>
-                    <h1 className="detail-title">{locality.name}</h1>
-                    <p className="detail-subtitle">{locality.area}</p>
-                    <p style={{ color: 'var(--accent-primary)', marginTop: '8px', fontWeight: 500 }}>
-                        {locality.priceRange}
+                    <h1 className="text-5xl md:text-6xl font-black text-black mb-3 tracking-tighter font-display">
+                        {locality.name}
+                    </h1>
+                    <p className="text-xl text-neutral-500 font-medium">{locality.area}</p>
+                    <p className="text-2xl font-black text-primary-600 mt-4 font-display">
+                        {locality.priceRange} <span className="text-neutral-400 text-sm font-bold">per sqft</span>
                     </p>
-                    <div style={{ marginTop: '12px' }}>
+                    <div className="mt-6">
                         <LiveAQIBadge localityId={locality.id} />
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <div className="flex gap-4 flex-wrap">
                     <button
                         onClick={toggleFavorite}
-                        className="btn btn-secondary"
-                        style={{ background: isFavorite ? 'rgba(239, 68, 68, 0.2)' : undefined }}
+                        className={`inline-flex items-center px-6 py-3 rounded-2xl font-bold transition-all ${isFavorite
+                            ? 'bg-danger/10 text-danger hover:bg-danger/20'
+                            : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:text-danger'
+                            }`}
                     >
-                        {isFavorite ? '❤️ Liked' : '🤍 Like'}
+                        <Heart className={`w-5 h-5 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
+                        {isFavorite ? 'Favorited' : 'Save to Favorites'}
                     </button>
-                    <button onClick={saveReport} className="btn btn-secondary">
-                        💾 Save Report
-                    </button>
-                    <button onClick={() => generatePDFReport(locality)} className="btn btn-primary">
-                        📄 Download PDF
+                    <button onClick={() => generatePDFReport(locality)} className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-2xl font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 hover:scale-105">
+                        <FileText className="w-5 h-5 mr-2" />Download Report
                     </button>
                 </div>
             </div>
 
             {/* Score + Map Grid */}
-            <div className="detail-grid">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-20">
                 {/* Total Score Card */}
-                <div className="glass-card total-score-container">
-                    <div className="score-gauge">
-                        <svg width="200" height="200" viewBox="0 0 200 200">
-                            <defs>
-                                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#6366f1" />
-                                    <stop offset="50%" stopColor="#8b5cf6" />
-                                    <stop offset="100%" stopColor="#a855f7" />
-                                </linearGradient>
-                            </defs>
-                            <circle className="score-gauge-bg" cx="100" cy="100" r="85" />
+                <div className="bg-white rounded-3xl p-10 border border-neutral-100 shadow-xl shadow-neutral-100/50 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 group-hover:bg-primary-100 transition-colors"></div>
+
+                    <div className="relative w-56 h-56 mb-8">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
                             <circle
-                                className="score-gauge-fill"
-                                cx="100" cy="100" r="85"
+                                className="text-neutral-50"
+                                strokeWidth="16"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="85"
+                                cx="100"
+                                cy="100"
+                            />
+                            <circle
+                                className="text-primary-600 transition-all duration-1000 ease-out"
+                                strokeWidth="16"
                                 strokeDasharray={circumference}
                                 strokeDashoffset={offset}
+                                strokeLinecap="round"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="85"
+                                cx="100"
+                                cy="100"
                             />
                         </svg>
-                        <div className="score-gauge-text">
-                            <div className="score-gauge-value">{locality.totalScore}</div>
-                            <div className="score-gauge-label">out of 100</div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center font-display">
+                            <div className="text-7xl font-black text-black">{locality.totalScore}</div>
+                            <div className="text-xs text-neutral-400 font-black uppercase tracking-[0.2em] mt-2">Score</div>
                         </div>
                     </div>
 
-                    <div className={`recommendation ${badge.class}`}>
+                    <div className={`text-xl font-black px-6 py-2 rounded-2xl mb-4 font-display ${badge.class === 'recommendation-buy' ? 'bg-success/10 text-success' : badge.class === 'recommendation-avoid' ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'}`}>
                         {badge.text}
                     </div>
-                    <p className="text-muted" style={{ marginTop: '8px' }}>{badge.desc}</p>
+                    <p className="text-neutral-500 font-medium leading-relaxed">{badge.desc}</p>
                 </div>
 
                 {/* Map */}
-                <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div className="lg:col-span-2 bg-white rounded-3xl border border-neutral-100 shadow-xl shadow-neutral-100/50 overflow-hidden h-[500px]">
                     <LocalityMap coordinates={locality.coordinates} name={locality.name} />
                 </div>
             </div>
 
             {/* Metrics Grid */}
-            <h3 style={{ marginTop: '40px', marginBottom: '20px' }}>📊 Detailed Metrics</h3>
-            <div className="score-grid">
-                {Object.entries(locality.metrics).map(([key, metric], index) => (
-                    <div key={key} className="glass-card score-card animate-fade-in" style={{ animationDelay: `${index * 0.05}s`, textAlign: 'left', padding: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '1.5rem' }}>{metricIcons[key]}</span>
-                            <span className="value" style={{ fontSize: '1.5rem' }}>{metric.score}</span>
+            <h3 className="text-3xl font-black text-black mb-10 flex items-center font-display tracking-tight">
+                <BarChart3 className="w-8 h-8 mr-4 text-primary-600" />
+                Detailed Metrics
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+                {Object.entries(locality.metrics).map(([key, metric], index) => {
+                    const Icon = metricIcons[key]
+                    return (
+                        <div
+                            key={key}
+                            className="bg-white p-8 rounded-3xl border border-neutral-100 hover:border-primary-300 shadow-sm hover:shadow-xl transition-all duration-500 animate-fade-in text-left group"
+                            style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="p-3 bg-primary-50 rounded-2xl text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">
+                                    <Icon className="w-7 h-7" />
+                                </div>
+                                <span className="text-3xl font-black text-black font-display">{metric.score}</span>
+                            </div>
+                            <div className="font-bold text-black mb-2 text-lg font-display">
+                                {metricLabels[key]}
+                            </div>
+                            <span className={`inline-block px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider mb-4 ${metric.status === 'excellent' ? 'bg-success/10 text-success' :
+                                metric.status === 'bad' || metric.status === 'poor' ? 'bg-danger/10 text-danger' :
+                                    'bg-warning/10 text-warning'
+                                }`}>
+                                {metric.label}
+                            </span>
+                            <p className="text-sm text-neutral-500 font-medium leading-relaxed font-ui">
+                                {metric.details}
+                            </p>
                         </div>
-                        <div className="label" style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                            {metricLabels[key]}
-                        </div>
-                        <span className={`status status-${metric.status}`} style={{ marginBottom: '8px', display: 'inline-block' }}>
-                            {metric.label}
-                        </span>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-                            {metric.details}
-                        </p>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
 
             {/* Highlights */}
-            <h3 style={{ marginTop: '40px', marginBottom: '20px' }}>✨ Key Highlights</h3>
-            <div className="glass-card" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+            <h3 className="text-3xl font-black text-black mb-10 flex items-center font-display tracking-tight">
+                <Sparkles className="w-8 h-8 mr-4 text-primary-600" />
+                Key Highlights
+            </h3>
+            <div className="bg-white p-10 rounded-3xl border border-neutral-100 shadow-xl shadow-neutral-100/50 mb-20 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-2 h-full bg-primary-600"></div>
+                <div className="flex flex-wrap gap-4">
                     {locality.highlights.map((highlight, i) => (
-                        <span key={i} className="metric-pill" style={{ padding: '10px 20px', fontSize: '1rem' }}>
+                        <span key={i} className="px-6 py-3 bg-neutral-50 border border-neutral-100 text-charcoal rounded-2xl text-[15px] font-bold font-ui hover:bg-white hover:border-primary-300 hover:shadow-md transition-all cursor-default">
                             {highlight}
                         </span>
                     ))}
                 </div>
             </div>
 
+            {/* Nearby Places */}
+            <h3 className="text-3xl font-black text-black mb-10 flex items-center font-display tracking-tight">
+                <MapPin className="w-8 h-8 mr-4 text-primary-600" />
+                Nearby Places
+            </h3>
+            <div className="mb-20">
+                <NearbyPlacesList localityId={locality.id} />
+            </div>
+
             {/* Compare CTA */}
-            <div className="text-center" style={{ marginTop: '60px', paddingBottom: '40px' }}>
-                <p className="text-muted" style={{ marginBottom: '16px' }}>
+            <div className="text-center py-20 border-t border-neutral-100 font-ui text-neutral-900 border-dashed border-2 rounded-[40px] mt-10">
+                <p className="text-neutral-500 mb-8 text-xl font-medium">
                     Want to compare with other localities?
                 </p>
-                <Link href="/compare" className="btn btn-secondary">
-                    ⚖️ Compare Localities
+                <Link href="/compare" className="inline-flex items-center px-8 py-4 bg-white border-2 border-primary-600 text-primary-600 rounded-2xl font-black text-lg hover:bg-primary-600 hover:text-white hover:shadow-2xl hover:shadow-primary-600/30 transition-all active:scale-95">
+                    <Scale className="w-6 h-6 mr-3" />Compare Localities
                 </Link>
             </div>
         </div>

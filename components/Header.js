@@ -1,91 +1,47 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Search, Home, BarChart3, MapPin } from 'lucide-react'
 
 export default function Header() {
-    const [user, setUser] = useState(null)
-
-    useEffect(() => {
-        // Check for user session
-        const session = localStorage.getItem('localityiq_session')
-        if (session) {
-            try {
-                const sessionData = JSON.parse(session)
-                setUser(sessionData)
-            } catch (e) {
-                console.error('Invalid session data')
-            }
-        }
-
-        // Listen for storage changes (for login/logout across tabs)
-        const handleStorageChange = () => {
-            const session = localStorage.getItem('localityiq_session')
-            if (session) {
-                setUser(JSON.parse(session))
-            } else {
-                setUser(null)
-            }
-        }
-
-        window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
-
     return (
-        <header className="header">
-            <div className="header-content">
-                <Link href="/" className="logo">
-                    <div className="logo-icon">🏠</div>
-                    <span>LocalityIQ</span>
-                </Link>
-                <nav>
-                    <ul className="nav-links">
-                        <li><Link href="/">Home</Link></li>
-                        <li><Link href="/search">🔍 Search</Link></li>
-                        <li><Link href="/compare">Compare</Link></li>
-                        {user ? (
-                            <li>
-                                <Link href="/profile" className="user-link">
-                                    <span className="user-avatar">{user.name?.charAt(0).toUpperCase()}</span>
-                                    <span>{user.name}</span>
-                                </Link>
-                            </li>
-                        ) : (
-                            <li><Link href="/login">Login</Link></li>
-                        )}
-                    </ul>
-                </nav>
+        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-neutral-100 shadow-clean transition-all duration-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-20">
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
+                            <MapPin className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-2xl font-black text-black tracking-tighter group-hover:text-primary-600 transition-colors font-display">
+                            LocalityIQ
+                        </span>
+                    </Link>
+
+                    <nav className="hidden md:flex items-center gap-10 font-ui">
+                        <Link
+                            href="/"
+                            className="flex items-center gap-2 text-[15px] font-bold text-charcoal hover:text-primary-600 transition-all hover:-translate-y-0.5"
+                        >
+                            <Home className="w-4 h-4" />
+                            Home
+                        </Link>
+                        <Link
+                            href="/search"
+                            className="flex items-center gap-2 text-[15px] font-bold text-charcoal hover:text-primary-600 transition-all hover:-translate-y-0.5"
+                        >
+                            <Search className="w-4 h-4" />
+                            Search
+                        </Link>
+                        <Link
+                            href="/compare"
+                            className="flex items-center gap-2 text-[15px] font-bold text-charcoal hover:text-primary-600 transition-all hover:-translate-y-0.5"
+                        >
+                            <BarChart3 className="w-4 h-4" />
+                            Compare
+                        </Link>
+                    </nav>
+                </div>
             </div>
-
-            <style jsx>{`
-        .user-link {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 4px 12px 4px 4px;
-          background: rgba(99, 102, 241, 0.1);
-          border-radius: 24px;
-          transition: all 0.2s ease;
-        }
-
-        .user-link:hover {
-          background: rgba(99, 102, 241, 0.2);
-        }
-
-        .user-avatar {
-          width: 28px;
-          height: 28px;
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: white;
-        }
-      `}</style>
         </header>
     )
 }
