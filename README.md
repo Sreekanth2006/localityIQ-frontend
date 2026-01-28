@@ -2,9 +2,7 @@
 
 **Neighbourhood Intelligence Platform** - Get comprehensive health scores for any locality worldwide.
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black)
-![Node.js](https://img.shields.io/badge/Node.js-Express-green)
-![License](https://img.shields.io/badge/License-MIT-blue)
+![LocalityIQ](public/home.png)
 
 ## ✨ Features
 
@@ -21,11 +19,9 @@
 
 ```bash
 # Frontend
-cd localityiq
 npm install
 
 # Backend API
-cd api
 npm install
 ```
 
@@ -42,7 +38,6 @@ Works without keys using free OpenStreetMap APIs!
 
 ```bash
 # Terminal 1 - API Server
-cd api
 node server.js
 
 # Terminal 2 - Frontend
